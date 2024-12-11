@@ -126,7 +126,7 @@ describe("GameRewardDistributor", function () {
     const tokenAmount1 = ethers.parseUnits("100", 18);
     await expect(
       gameRewardDistributor.connect(accounts[1]).claimTokens(mockERC20Address, tokenAmount1, invalidProof)
-    ).to.be.revertedWith("Invalid Merkle proof");
+    ).to.be.revertedWithCustomError(gameRewardDistributor, "InvalidMerkelProofError");
   });
 
   it("should prevent double claims", async () => {
@@ -147,7 +147,7 @@ describe("GameRewardDistributor", function () {
     // Attempt double claim
     await expect(
         gameRewardDistributor.connect(accounts[1]).claimTokens(mockERC20Address, tokenAmount1, proof)
-    ).to.be.revertedWith("No claimable amount left");
+    ).to.be.revertedWithCustomError(gameRewardDistributor, "NoAmountLeftToClaimError");
   });
 
   it("should prevent unauthorized users from updating the Merkle root", async () => {

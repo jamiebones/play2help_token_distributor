@@ -9,12 +9,17 @@ import "hardhat/console.sol";
 contract GameRewardDistributor is Ownable {
     // Merkle root for validating user claims
     bytes32 public merkleRoot;
-
     // Mapping to track claimed tokens per user and token
     mapping(address => mapping(address => uint256)) public claimedAmounts;
-
     event MerkleRootUpdated(bytes32 indexed newMerkleRoot);
     event TokensClaimed(address indexed user, address indexed token, uint256 amount);
+
+    error MerkleRootCanNotBeZeroError();
+    error ZeroAddressError();
+    error AmountMustBeBiggerThanZeroError();
+    error InvalidMerkelProofError();
+    error NoAmountLeftToClaimError();
+    error LessBalanceError();
 
     constructor() Ownable(msg.sender){
         merkleRoot = keccak256(abi.encodePacked(""));
@@ -24,7 +29,9 @@ contract GameRewardDistributor is Ownable {
      * @dev Updates the Merkle root. Only the owner can update it.
      */
     function updateMerkleRoot(bytes32 _newMerkleRoot) external onlyOwner {
-        require(_newMerkleRoot != bytes32(0), "Merkle root cannot be zero");
+        if ( _newMerkleRoot == bytes32(0)){
+            revert MerkleRootCanNotBeZeroError();
+        }
         merkleRoot = _newMerkleRoot;
         emit MerkleRootUpdated(_newMerkleRoot);
     }
@@ -36,21 +43,32 @@ contract GameRewardDistributor is Ownable {
      * @param proof The Merkle proof for the claim.
      */
     function claimTokens(address token, uint256 amount, bytes32[] calldata proof) external {
-        require(token != address(0), "Token address cannot be zero");
-        require(amount > 0, "Claim amount must be greater than zero");
-        
-        // Reconstruct the leaf node for this claim
+        if ( token == address(0)){
+            revert ZeroAddressError();
+        }
+        if ( amount == 0 ){
+            revert AmountMustBeBiggerThanZeroError();
+        }
         bytes32 leaf = keccak256(abi.encode(msg.sender, token, amount));
-        require(MerkleProof.verify(proof, merkleRoot, leaf), "Invalid Merkle proof");
-
+        if (!MerkleProof.verify(proof, merkleRoot, leaf)){
+            revert InvalidMerkelProofError();
+        }
+       
         uint256 alreadyClaimed = claimedAmounts[msg.sender][token];
-        require(alreadyClaimed < amount, "No claimable amount left");
+        if (alreadyClaimed >= amount ){
+            revert NoAmountLeftToClaimError();
+        }
+        //require(alreadyClaimed < amount, "No claimable amount left");
 
         uint256 claimableAmount = amount - alreadyClaimed;
         claimedAmounts[msg.sender][token] = amount;
 
+        uint256 contractTokenBalance = IERC20(token).balanceOf(address(this));
+        if ( contractTokenBalance < claimableAmount ){
+            revert LessBalanceError();
+        }
+        
         IERC20(token).transfer(msg.sender, claimableAmount);
-
         emit TokensClaimed(msg.sender, token, claimableAmount);
     }
 
@@ -60,9 +78,12 @@ contract GameRewardDistributor is Ownable {
      * @param amount The amount of tokens to withdraw.
      */
     function withdrawTokens(address token, uint256 amount) external onlyOwner {
-        require(token != address(0), "Token address cannot be zero");
-        require(amount > 0, "Withdraw amount must be greater than zero");
-        
+        if ( token == address(0)){
+            revert ZeroAddressError();
+        }
+        if ( amount == 0 ){
+            revert AmountMustBeBiggerThanZeroError();
+        }
         IERC20(token).transfer(msg.sender, amount);
     }
 }
