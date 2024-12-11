@@ -68,12 +68,26 @@ const config: HardhatUserConfig = {
 			gasPrice: 60000000,
 			accounts: [PRIVATE_KEY],
 		},
+		bscTestnet: {
+			url: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+			chainId: 97,
+			gasPrice: 20000000000,
+			accounts: [PRIVATE_KEY]
+		  },
+		  bsc: {
+			url: "https://bsc-dataseed.binance.org/",
+			chainId: 56,
+			gasPrice: 20000000000,
+			accounts: [PRIVATE_KEY]
+		  }
 	},
 	etherscan: {
 		apiKey: {
 			// Is not required by blockscout. Can be any non-empty string
 			rsktestnet: "your API key",
 			rskmainnet: "your API key",
+			bsc: "ZF8GU73AFND1W4ADDI1TUJJUUSCPWUXBCB",
+			bscTestnet: "ZF8GU73AFND1W4ADDI1TUJJUUSCPWUXBCB"
 		},
 		customChains: [
 			{
