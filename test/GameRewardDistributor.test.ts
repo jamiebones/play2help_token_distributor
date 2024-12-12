@@ -64,7 +64,7 @@ describe("GameRewardDistributor", function () {
           merkleTree = new MerkleTree(leaves, keccak256, { sortPairs: true });
           merkleRoot = merkleTree.getHexRoot();
 
-          console.log("merkle tree ", merkleTree.toString())
+          console.log("merkle tree ", merkleTree)
           console.log("merkle root ", merkleRoot)
 
 		return {
@@ -110,7 +110,7 @@ describe("GameRewardDistributor", function () {
                 mockERC20Address,
                 tokenAmount1,
               ])
-          );
+    );
 
     
     const proof = merkleTree.getHexProof(leaf);
